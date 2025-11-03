@@ -1,12 +1,15 @@
 const API_BASE = 'https://api.trace.moe';
 const JIKAN_API = 'https://api.jikan.moe/v4';
+const ANILIST_API = 'https://graphql.anilist.co';
 
 let uploadedFile = null;
+let currentFilter = 'trending';
 
 document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
     initImageUpload();
     initAnimeSearch();
+    initBrowse();
 });
 
 function initNavigation() {
@@ -346,4 +349,324 @@ function downloadEpisode(animeId, episodeNum) {
     alert(message);
     
     window.open(sources[0], '_blank');
+}
+
+function initBrowse() {
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const genreFilter = document.getElementById('genreFilter');
+    const yearFilter = document.getElementById('yearFilter');
+    
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            filterBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentFilter = btn.dataset.filter;
+            loadBrowseAnime(currentFilter);
+        });
+    });
+
+    if (genreFilter) {
+        genreFilter.addEventListener('change', () => {
+            loadBrowseAnime(currentFilter);
+        });
+    }
+
+    if (yearFilter) {
+        yearFilter.addEventListener('change', () => {
+            loadBrowseAnime(currentFilter);
+        });
+    }
+
+    loadBrowseAnime('trending');
+
+    const modal = document.getElementById('animeModal');
+    const closeBtn = document.querySelector('.modal-close');
+    
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            modal.classList.remove('show');
+            modal.classList.add('hidden');
+        });
+    }
+
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.classList.remove('show');
+            modal.classList.add('hidden');
+        }
+    });
+}
+
+async function loadBrowseAnime(filter) {
+    showLoader(true);
+    
+    try {
+        const query = `
+            query ($page: Int, $perPage: Int, $sort: [MediaSort]) {
+                Page(page: $page, perPage: $perPage) {
+                    media(type: ANIME, sort: $sort) {
+                        id
+                        title {
+                            romaji
+                            english
+                        }
+                        coverImage {
+                            large
+                            extraLarge
+                        }
+                        averageScore
+                        episodes
+                        status
+                        genres
+                        seasonYear
+                        format
+                    }
+                }
+            }
+        `;
+
+        let sort = ['TRENDING_DESC'];
+        if (filter === 'popular') sort = ['POPULARITY_DESC'];
+        if (filter === 'upcoming') sort = ['START_DATE_DESC'];
+        if (filter === 'top') sort = ['SCORE_DESC'];
+
+        const variables = {
+            page: 1,
+            perPage: 20,
+            sort: sort
+        };
+
+        const response = await fetch(ANILIST_API, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ query, variables })
+        });
+
+        const data = await response.json();
+        displayBrowseResults(data.data.Page.media);
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to load anime. Please try again.');
+    } finally {
+        showLoader(false);
+    }
+}
+
+function displayBrowseResults(animeList) {
+    const browseResults = document.getElementById('browseResults');
+    
+    if (!animeList || animeList.length === 0) {
+        browseResults.innerHTML = '<p style="text-align: center; color: var(--text-secondary); grid-column: 1/-1;">No anime found</p>';
+        return;
+    }
+
+    browseResults.innerHTML = animeList.map(anime => {
+        const title = anime.title.english || anime.title.romaji;
+        const score = anime.averageScore ? (anime.averageScore / 10).toFixed(1) : 'N/A';
+        const genres = anime.genres.slice(0, 3);
+        
+        return `
+            <div class="browse-card" onclick="showAnimeDetails(${anime.id})">
+                <img src="${anime.coverImage.extraLarge || anime.coverImage.large}" alt="${title}" class="browse-card-image">
+                ${anime.averageScore ? `<div class="browse-card-badge">⭐ ${score}</div>` : ''}
+                <div class="browse-card-info">
+                    <h3 class="browse-card-title">${title}</h3>
+                    <div class="browse-card-meta">
+                        ${anime.episodes ? `<span class="meta-badge">${anime.episodes} Episodes</span>` : ''}
+                        ${anime.seasonYear ? `<span class="meta-badge">${anime.seasonYear}</span>` : ''}
+                        ${anime.format ? `<span class="meta-badge">${anime.format}</span>` : ''}
+                    </div>
+                    <div class="browse-card-genres">
+                        ${genres.map(genre => `<span class="genre-tag">${genre}</span>`).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+async function showAnimeDetails(animeId) {
+    showLoader(true);
+    
+    try {
+        const query = `
+            query ($id: Int) {
+                Media(id: $id, type: ANIME) {
+                    id
+                    title {
+                        romaji
+                        english
+                        native
+                    }
+                    description
+                    coverImage {
+                        extraLarge
+                    }
+                    bannerImage
+                    averageScore
+                    episodes
+                    duration
+                    status
+                    genres
+                    seasonYear
+                    format
+                    studios {
+                        nodes {
+                            name
+                        }
+                    }
+                    trailer {
+                        id
+                        site
+                    }
+                    characters(perPage: 8, sort: ROLE) {
+                        edges {
+                            node {
+                                name {
+                                    full
+                                }
+                                image {
+                                    large
+                                }
+                            }
+                            role
+                        }
+                    }
+                    externalLinks {
+                        site
+                        url
+                    }
+                }
+            }
+        `;
+
+        const variables = { id: animeId };
+
+        const response = await fetch(ANILIST_API, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ query, variables })
+        });
+
+        const data = await response.json();
+        displayAnimeModal(data.data.Media);
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to load anime details. Please try again.');
+    } finally {
+        showLoader(false);
+    }
+}
+
+function displayAnimeModal(anime) {
+    const title = anime.title.english || anime.title.romaji;
+    const score = anime.averageScore ? (anime.averageScore / 10).toFixed(1) : 'N/A';
+    const description = anime.description ? anime.description.replace(/<[^>]*>/g, '') : 'No description available';
+    const studio = anime.studios.nodes.length > 0 ? anime.studios.nodes[0].name : 'Unknown';
+    
+    const streamingLinks = anime.externalLinks.filter(link => 
+        link.site.toLowerCase().includes('crunchyroll') || 
+        link.site.toLowerCase().includes('funimation') ||
+        link.site.toLowerCase().includes('netflix') ||
+        link.site.toLowerCase().includes('hulu')
+    );
+
+    const modalBody = document.getElementById('modalBody');
+    modalBody.innerHTML = `
+        <div class="modal-header">
+            <div class="modal-poster">
+                <img src="${anime.coverImage.extraLarge}" alt="${title}">
+            </div>
+            <div class="modal-info">
+                <h2 class="modal-title">${title}</h2>
+                ${anime.title.native ? `<p class="modal-subtitle">${anime.title.native}</p>` : ''}
+                <div class="modal-stats">
+                    ${anime.averageScore ? `
+                        <div class="stat-item">
+                            <i class="fas fa-star" style="color: #fbbf24;"></i>
+                            <span>${score}/10</span>
+                        </div>
+                    ` : ''}
+                    ${anime.episodes ? `
+                        <div class="stat-item">
+                            <i class="fas fa-film"></i>
+                            <span>${anime.episodes} Episodes</span>
+                        </div>
+                    ` : ''}
+                    ${anime.duration ? `
+                        <div class="stat-item">
+                            <i class="fas fa-clock"></i>
+                            <span>${anime.duration} min/ep</span>
+                        </div>
+                    ` : ''}
+                    ${anime.seasonYear ? `
+                        <div class="stat-item">
+                            <i class="fas fa-calendar"></i>
+                            <span>${anime.seasonYear}</span>
+                        </div>
+                    ` : ''}
+                </div>
+                <div class="browse-card-genres" style="margin-bottom: 1rem;">
+                    ${anime.genres.map(genre => `<span class="genre-tag">${genre}</span>`).join('')}
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-building"></i>
+                    <span>${studio}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-description">
+            <p>${description}</p>
+        </div>
+
+        ${anime.trailer && anime.trailer.site === 'youtube' ? `
+            <div class="modal-section">
+                <h3><i class="fas fa-play-circle"></i> Trailer</h3>
+                <div class="trailer-container">
+                    <iframe 
+                        src="https://www.youtube.com/embed/${anime.trailer.id}" 
+                        frameborder="0" 
+                        allowfullscreen>
+                    </iframe>
+                </div>
+            </div>
+        ` : ''}
+
+        ${anime.characters.edges.length > 0 ? `
+            <div class="modal-section">
+                <h3><i class="fas fa-users"></i> Characters</h3>
+                <div class="characters-grid">
+                    ${anime.characters.edges.map(edge => `
+                        <div class="character-card">
+                            <img src="${edge.node.image.large}" alt="${edge.node.name.full}">
+                            <div class="character-name">${edge.node.name.full}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        ` : ''}
+
+        ${streamingLinks.length > 0 ? `
+            <div class="modal-section">
+                <h3><i class="fas fa-tv"></i> Watch Now</h3>
+                <div class="streaming-links">
+                    ${streamingLinks.map(link => `
+                        <a href="${link.url}" target="_blank" class="stream-btn">
+                            <i class="fas fa-external-link-alt"></i>
+                            ${link.site}
+                        </a>
+                    `).join('')}
+                </div>
+            </div>
+        ` : ''}
+    `;
+
+    const modal = document.getElementById('animeModal');
+    modal.classList.remove('hidden');
+    modal.classList.add('show');
 }

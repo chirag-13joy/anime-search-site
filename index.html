@@ -17,6 +17,7 @@
                 </div>
                 <ul class="nav-links">
                     <li><a href="#search" class="active">Search</a></li>
+                    <li><a href="#browse">Browse</a></li>
                     <li><a href="#download">Download</a></li>
                     <li><a href="#about">About</a></li>
                 </ul>
@@ -74,6 +75,50 @@
             </div>
         </section>
 
+        <section id="browse" class="section">
+            <div class="hero">
+                <h2>Browse Anime</h2>
+                <p>Discover trending anime with detailed information, characters, and reviews</p>
+            </div>
+
+            <div class="browse-filters">
+                <div class="filter-group">
+                    <button class="filter-btn active" data-filter="trending">🔥 Trending</button>
+                    <button class="filter-btn" data-filter="popular">⭐ Popular</button>
+                    <button class="filter-btn" data-filter="upcoming">📅 Upcoming</button>
+                    <button class="filter-btn" data-filter="top">🏆 Top Rated</button>
+                </div>
+                <div class="search-filters">
+                    <select id="genreFilter" class="filter-select">
+                        <option value="">All Genres</option>
+                        <option value="Action">Action</option>
+                        <option value="Adventure">Adventure</option>
+                        <option value="Comedy">Comedy</option>
+                        <option value="Drama">Drama</option>
+                        <option value="Fantasy">Fantasy</option>
+                        <option value="Romance">Romance</option>
+                        <option value="Sci-Fi">Sci-Fi</option>
+                        <option value="Thriller">Thriller</option>
+                    </select>
+                    <select id="yearFilter" class="filter-select">
+                        <option value="">All Years</option>
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
+                        <option value="2022">2022</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="browseResults" class="browse-results"></div>
+            <div id="animeModal" class="modal hidden">
+                <div class="modal-content">
+                    <span class="modal-close">&times;</span>
+                    <div id="modalBody" class="modal-body"></div>
+                </div>
+            </div>
+        </section>
+
         <section id="download" class="section">
             <div class="hero">
                 <h2>Download Anime</h2>
@@ -123,7 +168,7 @@
         </section>
 
         <footer>
-            <p>&copy; 2025 AnimeSeek. Powered by trace.moe API</p>
+            <p>&copy; 2025 AnimeSeek. Powered by trace.moe, AniList & Jikan API</p>
         </footer>
     </div>
 
