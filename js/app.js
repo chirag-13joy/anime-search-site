@@ -239,19 +239,30 @@ function initAnimeSearch() {
 
 async function searchAnimeForDownload(query) {
     showLoader(true);
+    const animeResults = document.getElementById('animeResults');
     
     try {
         const response = await fetch(`${JIKAN_API}/anime?q=${encodeURIComponent(query)}&limit=12`);
         
         if (!response.ok) {
-            throw new Error('Failed to fetch anime');
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
-        displayAnimeResults(data.data);
+        
+        if (data.data && Array.isArray(data.data)) {
+            displayAnimeResults(data.data);
+        } else {
+            console.error('Invalid response format:', data);
+            if (animeResults) {
+                animeResults.innerHTML = '<p style="text-align: center; color: var(--text-secondary); grid-column: 1/-1;">Failed to search anime. Please try again.</p>';
+            }
+        }
     } catch (error) {
         console.error('Error:', error);
-        alert('Failed to search anime. Please try again.');
+        if (animeResults) {
+            animeResults.innerHTML = '<p style="text-align: center; color: var(--text-secondary); grid-column: 1/-1;">Failed to search anime. Please try again.</p>';
+        }
     } finally {
         showLoader(false);
     }
@@ -260,12 +271,19 @@ async function searchAnimeForDownload(query) {
 function displayAnimeResults(animeList) {
     const animeResults = document.getElementById('animeResults');
     
+    if (!animeResults) {
+        console.error('animeResults element not found');
+        return;
+    }
+    
     if (!animeList || animeList.length === 0) {
         animeResults.innerHTML = '<p style="text-align: center; color: var(--text-secondary); grid-column: 1/-1;">No anime found</p>';
         return;
     }
 
-    animeResults.innerHTML = animeList.map((anime, index) => `
+    animeResults.innerHTML = animeList.map((anime, index) => {
+        const title = (anime.title || '').replace(/'/g, "\\'");
+        return `
         <div class="anime-card">
             <img src="${anime.images.jpg.large_image_url}" alt="${anime.title}" class="anime-image">
             <div class="anime-info">
@@ -277,7 +295,7 @@ function displayAnimeResults(animeList) {
                 </div>
                 <p class="anime-synopsis">${anime.synopsis || 'No description available'}</p>
                 <div class="download-options">
-                    <button class="btn-download" onclick="downloadFullSeries('${anime.title}', ${anime.mal_id})">
+                    <button class="btn-download" onclick="downloadFullSeries(\`${title}\`, ${anime.mal_id})">
                         <i class="fas fa-download"></i> Download Full Series
                     </button>
                     <button class="btn-download secondary" onclick="toggleEpisodes(${index}, ${anime.mal_id}, ${anime.episodes || 12})">
@@ -287,7 +305,8 @@ function displayAnimeResults(animeList) {
                 </div>
             </div>
         </div>
-    `).join('');
+    `;
+    }).join('');
 }
 
 async function toggleEpisodes(index, animeId, totalEpisodes) {
@@ -445,10 +464,23 @@ async function loadBrowseAnime(filter) {
         });
 
         const data = await response.json();
-        displayBrowseResults(data.data.Page.media);
+        
+        if (data.errors) {
+            console.error('GraphQL errors:', data.errors);
+            throw new Error('GraphQL query failed');
+        }
+        
+        if (data.data && data.data.Page && data.data.Page.media) {
+            displayBrowseResults(data.data.Page.media);
+        } else {
+            throw new Error('Invalid response structure');
+        }
     } catch (error) {
         console.error('Error:', error);
-        alert('Failed to load anime. Please try again.');
+        const browseResults = document.getElementById('browseResults');
+        if (browseResults) {
+            browseResults.innerHTML = '<p style="text-align: center; color: var(--text-secondary); grid-column: 1/-1;">Failed to load anime. Please try again.</p>';
+        }
     } finally {
         showLoader(false);
     }
@@ -553,7 +585,17 @@ async function showAnimeDetails(animeId) {
         });
 
         const data = await response.json();
-        displayAnimeModal(data.data.Media);
+        
+        if (data.errors) {
+            console.error('GraphQL errors:', data.errors);
+            throw new Error('GraphQL query failed');
+        }
+        
+        if (data.data && data.data.Media) {
+            displayAnimeModal(data.data.Media);
+        } else {
+            throw new Error('Invalid response structure');
+        }
     } catch (error) {
         console.error('Error:', error);
         alert('Failed to load anime details. Please try again.');
@@ -563,17 +605,24 @@ async function showAnimeDetails(animeId) {
 }
 
 function displayAnimeModal(anime) {
+    if (!anime) {
+        console.error('No anime data provided');
+        return;
+    }
+    
     const title = anime.title.english || anime.title.romaji;
     const score = anime.averageScore ? (anime.averageScore / 10).toFixed(1) : 'N/A';
     const description = anime.description ? anime.description.replace(/<[^>]*>/g, '') : 'No description available';
-    const studio = anime.studios.nodes.length > 0 ? anime.studios.nodes[0].name : 'Unknown';
+    const studio = anime.studios && anime.studios.nodes && anime.studios.nodes.length > 0 ? anime.studios.nodes[0].name : 'Unknown';
     
-    const streamingLinks = anime.externalLinks.filter(link => 
-        link.site.toLowerCase().includes('crunchyroll') || 
-        link.site.toLowerCase().includes('funimation') ||
-        link.site.toLowerCase().includes('netflix') ||
-        link.site.toLowerCase().includes('hulu')
-    );
+    const streamingLinks = anime.externalLinks ? anime.externalLinks.filter(link => 
+        link.site && (
+            link.site.toLowerCase().includes('crunchyroll') || 
+            link.site.toLowerCase().includes('funimation') ||
+            link.site.toLowerCase().includes('netflix') ||
+            link.site.toLowerCase().includes('hulu')
+        )
+    ) : [];
 
     const modalBody = document.getElementById('modalBody');
     modalBody.innerHTML = `
@@ -637,7 +686,7 @@ function displayAnimeModal(anime) {
             </div>
         ` : ''}
 
-        ${anime.characters.edges.length > 0 ? `
+        ${anime.characters && anime.characters.edges && anime.characters.edges.length > 0 ? `
             <div class="modal-section">
                 <h3><i class="fas fa-users"></i> Characters</h3>
                 <div class="characters-grid">
