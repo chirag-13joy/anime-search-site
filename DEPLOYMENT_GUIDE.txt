@@ -1,0 +1,67 @@
+===========================================
+QUICK DEPLOYMENT GUIDE - AnimeSeek
+===========================================
+
+Your GitHub Repo: https://github.com/chirag-13joy/anime-search-site.git
+
+STEP 1: Push Code to GitHub
+----------------------------
+The repository is already configured. To push:
+
+git push -u origin main
+
+(You'll need to authenticate with GitHub)
+
+
+STEP 2: Enable GitHub Pages
+----------------------------
+1. Go to: https://github.com/chirag-13joy/anime-search-site
+2. Click "Settings" tab
+3. Click "Pages" in left sidebar
+4. Under "Source":
+   - Select branch: "main"
+   - Select folder: "/ (root)"
+5. Click "Save"
+6. Wait 2-3 minutes
+
+
+STEP 3: Access Your Live Website
+---------------------------------
+Your site will be available at:
+
+https://chirag-13joy.github.io/anime-search-site
+
+It may take 2-3 minutes after enabling Pages.
+
+
+ALTERNATIVE DEPLOYMENT OPTIONS
+================================
+
+Option A: Netlify (Instant Deploy)
+-----------------------------------
+1. Go to: https://app.netlify.com/drop
+2. Drag and drop entire "anime-search-site" folder
+3. Your site is live instantly!
+4. Free URL: https://your-site-name.netlify.app
+
+
+Option B: Vercel
+----------------
+1. Go to: https://vercel.com/new
+2. Import your GitHub repo
+3. Click "Deploy"
+4. Free URL: https://anime-search-site.vercel.app
+
+
+TESTING LOCALLY
+===============
+Open index.html in your browser - no server needed!
+
+
+TROUBLESHOOTING
+===============
+- If GitHub Pages not working: Check Settings > Pages is enabled
+- If API not working: APIs are free but have rate limits
+- If styles broken: Clear browser cache (Ctrl+Shift+R)
+
+Need help? Check README.md for detailed instructions.
