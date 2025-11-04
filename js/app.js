@@ -520,15 +520,20 @@ function displayAnimeModal(anime) {
             <div class="modal-section">
                 <h3><i class="fas fa-list"></i> Episodes (${anime.streamingEpisodes.length})</h3>
                 <div class="episodes-grid">
-                    ${anime.streamingEpisodes.slice(0, 24).map((ep, i) => `
-                        <div class="episode-card" onclick="showEpisodeInfo('${title.replace(/'/g, "\\'")}', ${i + 1}, '${ep.thumbnail}')">
-                            <img src="${ep.thumbnail}" class="episode-thumb" alt="${ep.title}">
+                    ${anime.streamingEpisodes.slice(0, 24).map((ep, i) => {
+                        const episodeTitle = ep.title || `Episode ${i + 1}`;
+                        const episodeMatch = episodeTitle.match(/Episode (\d+)/i);
+                        const episodeNum = episodeMatch ? episodeMatch[1] : (i + 1);
+                        return `
+                        <div class="episode-card" onclick="showEpisodeInfo('${title.replace(/'/g, "\\'")}', ${episodeNum}, '${ep.thumbnail}', '${episodeTitle.replace(/'/g, "\\'")}')">
+                            <img src="${ep.thumbnail}" class="episode-thumb" alt="${episodeTitle}">
                             <div class="episode-info">
-                                <div class="episode-title">${ep.title || `Episode ${i + 1}`}</div>
-                                <div class="episode-number">Episode ${i + 1}</div>
+                                <div class="episode-title">${episodeTitle}</div>
+                                <div class="episode-number">Episode ${episodeNum}</div>
                             </div>
                         </div>
-                    `).join('')}
+                    `;
+                    }).join('')}
                 </div>
             </div>
         ` : anime.episodes ? `
@@ -536,7 +541,7 @@ function displayAnimeModal(anime) {
                 <h3><i class="fas fa-list"></i> Episodes (${anime.episodes})</h3>
                 <div class="episodes-grid">
                     ${Array.from({length: Math.min(anime.episodes, 24)}, (_, i) => `
-                        <div class="episode-card" onclick="showEpisodeInfo('${title.replace(/'/g, "\\'")}', ${i + 1}, null)">
+                        <div class="episode-card" onclick="showEpisodeInfo('${title.replace(/'/g, "\\'")}', ${i + 1}, null, 'Episode ${i + 1}')">
                             <div class="episode-thumb" style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); display: flex; align-items: center; justify-content: center;">
                                 <i class="fas fa-play" style="font-size: 2rem; opacity: 0.5;"></i>
                             </div>
@@ -621,15 +626,17 @@ function getStreamingIcon(siteName) {
     return icons[siteName] || 'fas fa-play-circle';
 }
 
-function showEpisodeInfo(title, episodeNum, thumbnail) {
+function showEpisodeInfo(title, episodeNum, thumbnail, episodeTitle) {
     const player = document.getElementById('videoPlayer');
     const content = document.getElementById('playerContent');
+    
+    const displayTitle = episodeTitle || `Episode ${episodeNum}`;
     
     content.innerHTML = `
         <div class="episode-viewer">
             ${thumbnail ? `
                 <div class="episode-viewer-thumbnail">
-                    <img src="${thumbnail}" alt="Episode ${episodeNum}">
+                    <img src="${thumbnail}" alt="${displayTitle}">
                     <div class="play-overlay">
                         <i class="fas fa-play-circle"></i>
                     </div>
@@ -641,7 +648,7 @@ function showEpisodeInfo(title, episodeNum, thumbnail) {
             `}
             <div class="episode-viewer-info">
                 <h2>${title}</h2>
-                <h3>Episode ${episodeNum}</h3>
+                <h3>${displayTitle}</h3>
                 <p>Watch this episode on these legal streaming platforms:</p>
                 <div class="episode-platforms">
                     <a href="https://www.crunchyroll.com/search?q=${encodeURIComponent(title)}" target="_blank" rel="noopener noreferrer" class="episode-platform-btn crunchyroll">
