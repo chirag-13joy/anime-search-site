@@ -184,8 +184,8 @@ async function loadCarousel() {
                     </div>
                     <p class="carousel-description">${desc}</p>
                     <div class="carousel-actions">
-                        <button class="btn-play" onclick="showAnimeModal(${anime.id})">
-                            <i class="fas fa-play"></i> Watch Now
+                        <button class="btn-play" onclick="playAnimeTrailer(${anime.id}, '${title.replace(/'/g, "\\'")}')">
+                            <i class="fas fa-play"></i> Watch Trailer
                         </button>
                         <button class="btn-info" onclick="showAnimeModal(${anime.id})">
                             <i class="fas fa-info-circle"></i> More Info
@@ -445,9 +445,11 @@ function displayAnimeModal(anime) {
                         ${anime.genres.map(g => `<span class="genre-tag">${g}</span>`).join('')}
                     </div>
                     <div class="carousel-actions">
-                        <button class="btn-play" onclick="alert('Video player coming soon!')">
-                            <i class="fas fa-play"></i> Watch Now
-                        </button>
+                        ${anime.trailer && anime.trailer.site === 'youtube' ? `
+                            <button class="btn-play" onclick="playAnimeTrailer(${anime.id}, '${title.replace(/'/g, "\\'")}', '${anime.trailer.id}')">
+                                <i class="fas fa-play"></i> Watch Trailer
+                            </button>
+                        ` : ''}
                         <button class="btn-info" onclick="toggleWatchlist(${anime.id})">
                             <i class="fas fa-bookmark"></i> ${isInWatchlist(anime.id) ? 'Remove from' : 'Add to'} Watchlist
                         </button>
@@ -461,7 +463,7 @@ function displayAnimeModal(anime) {
                 <h3>Episodes</h3>
                 <div class="episodes-grid">
                     ${anime.streamingEpisodes.slice(0, 12).map((ep, i) => `
-                        <div class="episode-card" onclick="alert('Video player coming soon!')">
+                        <div class="episode-card" onclick="playEpisode(${anime.id}, ${i + 1}, '${title.replace(/'/g, "\\'")}', '${ep.url}', '${ep.thumbnail}')">
                             <img src="${ep.thumbnail}" class="episode-thumb" alt="${ep.title}">
                             <div class="episode-info">
                                 <div class="episode-title">${ep.title || `Episode ${i + 1}`}</div>
@@ -578,4 +580,97 @@ async function displayWatchlist() {
 function showLoader(show) {
     const loader = document.getElementById('loader');
     loader.classList.toggle('hidden', !show);
+}
+
+function playAnimeTrailer(animeId, title, trailerId) {
+    if (!trailerId) {
+        alert('No trailer available for this anime');
+        return;
+    }
+
+    const player = document.getElementById('videoPlayer');
+    const content = document.getElementById('playerContent');
+    
+    content.innerHTML = `
+        <iframe 
+            src="https://www.youtube.com/embed/${trailerId}?autoplay=1&rel=0" 
+            allow="autoplay; fullscreen; picture-in-picture"
+            allowfullscreen>
+        </iframe>
+        <div class="player-info">
+            <div class="player-title">${title}</div>
+            <div class="player-episode">Official Trailer</div>
+        </div>
+    `;
+    
+    player.classList.remove('hidden');
+    player.classList.add('show');
+    
+    const closeBtn = player.querySelector('.player-close');
+    const overlay = player.querySelector('.player-overlay');
+    
+    const closePlayer = () => {
+        player.classList.remove('show');
+        player.classList.add('hidden');
+        content.innerHTML = '';
+    };
+    
+    closeBtn.onclick = closePlayer;
+    overlay.onclick = closePlayer;
+}
+
+function playEpisode(animeId, episodeNum, title, url, thumbnail) {
+    const player = document.getElementById('videoPlayer');
+    const content = document.getElementById('playerContent');
+    
+    if (url && url.includes('http')) {
+        content.innerHTML = `
+            <iframe 
+                src="${url}" 
+                allow="autoplay; fullscreen; picture-in-picture"
+                allowfullscreen>
+            </iframe>
+            <div class="player-info">
+                <div class="player-title">${title}</div>
+                <div class="player-episode">Episode ${episodeNum}</div>
+            </div>
+        `;
+    } else {
+        content.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: center; height: 100%; flex-direction: column; gap: 1.5rem; padding: 2rem;">
+                <i class="fas fa-play-circle" style="font-size: 5rem; color: var(--primary);"></i>
+                <h2 style="font-size: 1.5rem;">Streaming Coming Soon</h2>
+                <p style="color: var(--text-secondary); text-align: center;">Direct streaming will be available soon. For now, please visit official streaming platforms.</p>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+                    <a href="https://www.crunchyroll.com/search?q=${encodeURIComponent(title)}" target="_blank" class="btn-play">
+                        <i class="fas fa-external-link-alt"></i> Crunchyroll
+                    </a>
+                    <a href="https://www.funimation.com/search/?q=${encodeURIComponent(title)}" target="_blank" class="btn-info">
+                        <i class="fas fa-external-link-alt"></i> Funimation
+                    </a>
+                </div>
+            </div>
+        `;
+    }
+    
+    player.classList.remove('hidden');
+    player.classList.add('show');
+    
+    const closeBtn = player.querySelector('.player-close');
+    const overlay = player.querySelector('.player-overlay');
+    
+    const closePlayer = () => {
+        player.classList.remove('show');
+        player.classList.add('hidden');
+        content.innerHTML = '';
+    };
+    
+    closeBtn.onclick = closePlayer;
+    overlay.onclick = closePlayer;
+    
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && player.classList.contains('show')) {
+            closePlayer();
+        }
+    });
 }
