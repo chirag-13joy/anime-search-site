@@ -5,18 +5,19 @@
 }
 
 :root {
-    --primary: #ff6b35;
-    --primary-dark: #e85a2a;
-    --secondary: #ffd23f;
-    --dark-bg: #0a0e27;
-    --darker-bg: #06090f;
-    --card-bg: #141b2d;
-    --card-hover: #1a2332;
+    --primary: #f43f5e;
+    --primary-dark: #e11d48;
+    --primary-light: #fb7185;
+    --accent: #8b5cf6;
+    --dark-bg: #0f0f0f;
+    --darker-bg: #0a0a0a;
+    --card-bg: #1a1a1a;
+    --card-hover: #242424;
     --text-primary: #ffffff;
-    --text-secondary: #b4bac7;
-    --border: #1f2937;
-    --success: #10b981;
-    --warning: #fbbf24;
+    --text-secondary: #a1a1aa;
+    --border: #27272a;
+    --success: #22c55e;
+    --warning: #f59e0b;
 }
 
 body {
@@ -32,11 +33,12 @@ body {
     top: 0;
     left: 0;
     right: 0;
-    background: rgba(10, 14, 39, 0.95);
-    backdrop-filter: blur(10px);
+    background: rgba(15, 15, 15, 0.98);
+    backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--border);
     z-index: 1000;
-    padding: 1rem 0;
+    padding: 0.75rem 0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
 }
 
 .nav-container {
@@ -78,18 +80,20 @@ body {
 
 .nav-search input {
     width: 100%;
-    padding: 0.75rem 1rem 0.75rem 2.75rem;
+    padding: 0.85rem 1.25rem 0.85rem 3rem;
     background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 50px;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
     color: var(--text-primary);
     outline: none;
     transition: all 0.3s;
+    font-size: 0.95rem;
 }
 
 .nav-search input:focus {
     border-color: var(--primary);
     background: var(--darker-bg);
+    box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.1);
 }
 
 .search-suggestions {
@@ -163,8 +167,8 @@ body {
 }
 
 main {
-    margin-top: 70px;
-    min-height: calc(100vh - 70px);
+    margin-top: 65px;
+    min-height: calc(100vh - 65px);
 }
 
 .section {
@@ -183,9 +187,10 @@ main {
 
 .hero-carousel {
     position: relative;
-    height: 500px;
+    height: 600px;
     overflow: hidden;
     background: var(--darker-bg);
+    margin-bottom: 2rem;
 }
 
 .carousel-container {
@@ -206,8 +211,8 @@ main {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(to right, rgba(10, 14, 39, 0.95) 0%, transparent 50%, rgba(10, 14, 39, 0.95) 100%),
-                linear-gradient(to top, rgba(10, 14, 39, 1) 0%, transparent 50%);
+    background: linear-gradient(to right, rgba(15, 15, 15, 0.95) 0%, transparent 40%, rgba(15, 15, 15, 0.95) 100%),
+                linear-gradient(to top, rgba(15, 15, 15, 1) 0%, transparent 60%);
 }
 
 .carousel-content {
@@ -241,11 +246,13 @@ main {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: rgba(255, 107, 53, 0.2);
-    border-radius: 20px;
+    padding: 0.6rem 1.2rem;
+    background: rgba(244, 63, 94, 0.15);
+    border: 1px solid rgba(244, 63, 94, 0.3);
+    border-radius: 8px;
     font-size: 0.9rem;
     font-weight: 600;
+    backdrop-filter: blur(10px);
 }
 
 .carousel-description {
@@ -277,13 +284,15 @@ main {
 }
 
 .btn-play {
-    background: var(--primary);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
     color: white;
+    box-shadow: 0 4px 15px rgba(244, 63, 94, 0.4);
 }
 
 .btn-play:hover {
-    background: var(--primary-dark);
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
     transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(244, 63, 94, 0.5);
 }
 
 .btn-info {
@@ -406,16 +415,18 @@ main {
 
 .anime-card {
     position: relative;
-    border-radius: 10px;
+    border-radius: 12px;
     overflow: hidden;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     background: var(--card-bg);
+    border: 1px solid var(--border);
 }
 
 .anime-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    border-color: var(--primary);
 }
 
 .anime-card:hover .anime-overlay {
@@ -444,20 +455,21 @@ main {
 .anime-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(to top, rgba(10, 14, 39, 0.98) 0%, transparent 50%);
+    background: linear-gradient(to top, rgba(15, 15, 15, 0.98) 0%, rgba(15, 15, 15, 0.7) 50%, transparent 100%);
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    padding: 1rem;
+    padding: 1.25rem;
     opacity: 0;
-    transition: opacity 0.3s;
+    transition: opacity 0.3s ease;
 }
 
 .anime-title {
-    font-size: 1rem;
-    font-weight: 600;
+    font-size: 1.05rem;
+    font-weight: 700;
     margin-bottom: 0.5rem;
     line-height: 1.3;
+    color: var(--text-primary);
 }
 
 .anime-info {
@@ -675,11 +687,13 @@ main {
 }
 
 .genre-tag {
-    padding: 0.4rem 0.9rem;
-    background: rgba(255, 107, 53, 0.2);
-    border: 1px solid rgba(255, 107, 53, 0.3);
-    border-radius: 20px;
+    padding: 0.5rem 1rem;
+    background: rgba(139, 92, 246, 0.15);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 8px;
     font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--accent);
 }
 
 .modal-description {
