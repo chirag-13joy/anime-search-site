@@ -853,18 +853,16 @@ async function handleLogin(event) {
     event.preventDefault();
     
     if (!window.firebaseAuth) {
-        alert('Please add your Firebase configuration first!');
+        alert('Firebase is not configured. Please add your Firebase config to use login features.');
         return;
     }
     
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
     
-    const { signInWithEmailAndPassword } = window.firebaseAuthModule;
-    
     try {
         showLoader(true);
-        await signInWithEmailAndPassword(window.firebaseAuth, email, password);
+        await firebase.auth().signInWithEmailAndPassword(email, password);
         closeAuthModal();
         alert('Welcome back! 🎉');
     } catch (error) {
@@ -879,7 +877,7 @@ async function handleSignup(event) {
     event.preventDefault();
     
     if (!window.firebaseAuth) {
-        alert('Please add your Firebase configuration first!');
+        alert('Firebase is not configured. Please add your Firebase config to use signup features.');
         return;
     }
     
@@ -887,14 +885,14 @@ async function handleSignup(event) {
     const email = document.getElementById('signupEmail').value;
     const password = document.getElementById('signupPassword').value;
     
-    const { createUserWithEmailAndPassword, updateProfile } = window.firebaseAuthModule;
-    
     try {
         showLoader(true);
-        const userCredential = await createUserWithEmailAndPassword(window.firebaseAuth, email, password);
-        await updateProfile(userCredential.user, { displayName: name });
+        const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+        await userCredential.user.updateProfile({ displayName: name });
         
-        await saveUserData(userCredential.user);
+        if (window.firebaseDb) {
+            await saveUserData(userCredential.user);
+        }
         
         closeAuthModal();
         alert('Account created successfully! Welcome! 🎉');
@@ -908,17 +906,18 @@ async function handleSignup(event) {
 
 async function signInWithGoogle() {
     if (!window.firebaseAuth) {
-        alert('Please add your Firebase configuration first!');
+        alert('Firebase is not configured. Please add your Firebase config to use Google sign-in.');
         return;
     }
     
-    const { GoogleAuthProvider, signInWithPopup } = window.firebaseAuthModule;
-    const provider = new GoogleAuthProvider();
+    const provider = new firebase.auth.GoogleAuthProvider();
     
     try {
         showLoader(true);
-        const result = await signInWithPopup(window.firebaseAuth, provider);
-        await saveUserData(result.user);
+        const result = await firebase.auth().signInWithPopup(provider);
+        if (window.firebaseDb) {
+            await saveUserData(result.user);
+        }
         closeAuthModal();
         alert('Welcome! 🎉');
     } catch (error) {
@@ -932,10 +931,8 @@ async function signInWithGoogle() {
 async function logout() {
     if (!window.firebaseAuth) return;
     
-    const { signOut } = window.firebaseAuthModule;
-    
     try {
-        await signOut(window.firebaseAuth);
+        await firebase.auth().signOut();
         alert('Logged out successfully!');
         window.location.href = '#home';
     } catch (error) {
@@ -947,16 +944,13 @@ async function logout() {
 async function saveUserData(user) {
     if (!window.firebaseDb) return;
     
-    const { doc, setDoc, serverTimestamp } = window.firebaseFirestoreModule;
-    
     try {
-        const userRef = doc(window.firebaseDb, 'users', user.uid);
-        await setDoc(userRef, {
+        await db.collection('users').doc(user.uid).set({
             displayName: user.displayName,
             email: user.email,
             photoURL: user.photoURL,
-            createdAt: serverTimestamp(),
-            lastLogin: serverTimestamp()
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            lastLogin: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
     } catch (error) {
         console.error('Error saving user data:', error);

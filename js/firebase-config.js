@@ -10,58 +10,54 @@ const firebaseConfig = {
   appId: "YOUR_APP_ID"
 };
 
-// Initialize Firebase (will be done after you add your config)
-let auth, db;
-
-if (firebaseConfig.apiKey !== "YOUR_API_KEY_HERE") {
-  import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js').then((firebase) => {
-    const { initializeApp } = firebase;
-    import('https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js').then((authModule) => {
-      import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js').then((firestoreModule) => {
-        const app = initializeApp(firebaseConfig);
-        auth = authModule.getAuth(app);
-        db = firestoreModule.getFirestore(app);
-        
-        window.firebaseAuth = auth;
-        window.firebaseDb = db;
-        window.firebaseAuthModule = authModule;
-        window.firebaseFirestoreModule = firestoreModule;
-        
-        console.log('✅ Firebase initialized successfully!');
-        checkAuthState();
-      });
-    });
-  });
-} else {
-  console.warn('⚠️ Please add your Firebase configuration in js/firebase-config.js');
-}
-
-function checkAuthState() {
-  const { onAuthStateChanged } = window.firebaseAuthModule;
+// Initialize Firebase
+if (firebaseConfig.apiKey !== "YOUR_API_KEY_HERE" && typeof firebase !== 'undefined') {
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
   
-  onAuthStateChanged(window.firebaseAuth, (user) => {
+  window.firebaseAuth = auth;
+  window.firebaseDb = db;
+  
+  console.log('✅ Firebase initialized successfully!');
+  
+  auth.onAuthStateChanged((user) => {
     if (user) {
       updateUIForLoggedInUser(user);
     } else {
       updateUIForLoggedOutUser();
     }
   });
+} else if (firebaseConfig.apiKey === "YOUR_API_KEY_HERE") {
+  console.warn('⚠️ Please add your Firebase configuration in js/firebase-config.js');
+  console.log('📝 Site will work without Firebase, but login features will be disabled');
 }
 
 function updateUIForLoggedInUser(user) {
-  document.getElementById('loginBtn').classList.add('hidden');
-  document.getElementById('userSection').classList.remove('hidden');
-  document.getElementById('userName').textContent = user.displayName || 'User';
-  document.getElementById('userEmail').textContent = user.email;
+  const loginBtn = document.getElementById('loginBtn');
+  const userSection = document.getElementById('userSection');
   
-  if (document.getElementById('profile').classList.contains('active')) {
+  if (loginBtn) loginBtn.classList.add('hidden');
+  if (userSection) userSection.classList.remove('hidden');
+  
+  const userName = document.getElementById('userName');
+  const userEmail = document.getElementById('userEmail');
+  
+  if (userName) userName.textContent = user.displayName || 'User';
+  if (userEmail) userEmail.textContent = user.email;
+  
+  const profileSection = document.getElementById('profile');
+  if (profileSection && profileSection.classList.contains('active')) {
     loadUserProfile(user);
   }
 }
 
 function updateUIForLoggedOutUser() {
-  document.getElementById('loginBtn').classList.remove('hidden');
-  document.getElementById('userSection').classList.add('hidden');
+  const loginBtn = document.getElementById('loginBtn');
+  const userSection = document.getElementById('userSection');
+  
+  if (loginBtn) loginBtn.classList.remove('hidden');
+  if (userSection) userSection.classList.add('hidden');
 }
 
 function loadUserProfile(user) {
@@ -71,21 +67,19 @@ function loadUserProfile(user) {
   const joinDate = new Date(user.metadata.creationTime);
   document.getElementById('profileJoined').textContent = joinDate.toLocaleDateString();
   
-  loadUserStats(user.uid);
+  if (window.firebaseDb) {
+    loadUserStats(user.uid);
+  }
 }
 
 async function loadUserStats(userId) {
-  const { collection, query, where, getDocs } = window.firebaseFirestoreModule;
+  if (!window.firebaseDb) return;
   
   try {
-    const watchlistRef = collection(window.firebaseDb, 'watchlist');
-    const watchlistQuery = query(watchlistRef, where('userId', '==', userId));
-    const watchlistSnapshot = await getDocs(watchlistQuery);
+    const watchlistSnapshot = await db.collection('watchlist').where('userId', '==', userId).get();
     document.getElementById('statWatchlist').textContent = watchlistSnapshot.size;
     
-    const reviewsRef = collection(window.firebaseDb, 'reviews');
-    const reviewsQuery = query(reviewsRef, where('userId', '==', userId));
-    const reviewsSnapshot = await getDocs(reviewsQuery);
+    const reviewsSnapshot = await db.collection('reviews').where('userId', '==', userId).get();
     document.getElementById('statReviews').textContent = reviewsSnapshot.size;
     
     document.getElementById('statLikes').textContent = '0';
@@ -93,5 +87,3 @@ async function loadUserStats(userId) {
     console.error('Error loading stats:', error);
   }
 }
-
-export { auth, db };
