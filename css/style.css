@@ -719,6 +719,77 @@ main {
     margin-bottom: 1.5rem;
 }
 
+.streaming-platforms {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.platform-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    background: var(--darker-bg);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: all 0.3s;
+    font-weight: 600;
+}
+
+.platform-card:hover {
+    border-color: var(--primary);
+    background: var(--card-hover);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(244, 63, 94, 0.2);
+}
+
+.platform-card i:first-child {
+    font-size: 1.75rem;
+    color: var(--primary);
+}
+
+.platform-card span {
+    flex: 1;
+}
+
+.reviews-section {
+    background: var(--darker-bg);
+    padding: 2rem;
+    border-radius: 12px;
+}
+
+.review-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-box {
+    text-align: center;
+    padding: 1.5rem;
+    background: var(--card-bg);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
 .episodes-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -729,12 +800,13 @@ main {
     background: var(--darker-bg);
     border-radius: 10px;
     overflow: hidden;
-    cursor: pointer;
+    cursor: default;
     transition: all 0.3s;
+    border: 1px solid var(--border);
 }
 
 .episode-card:hover {
-    background: var(--card-hover);
+    border-color: var(--primary);
     transform: translateY(-3px);
 }
 
@@ -1023,8 +1095,9 @@ main {
     }
 
     .modal-container {
-        margin: 1rem;
+        margin: 0.5rem;
         border-radius: 10px;
+        max-width: calc(100% - 1rem);
     }
 
     .modal-poster-info {
@@ -1039,6 +1112,26 @@ main {
 
     .modal-details h1 {
         font-size: 1.75rem;
+        text-align: center;
+    }
+
+    .modal-meta {
+        justify-content: center;
+    }
+
+    .modal-genres {
+        justify-content: center;
+    }
+
+    .carousel-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .carousel-actions .btn-play,
+    .carousel-actions .btn-info {
+        width: 100%;
+        justify-content: center;
     }
 
     .modal-header {
@@ -1061,6 +1154,27 @@ main {
 
     .episodes-grid {
         grid-template-columns: 1fr;
+    }
+
+    .streaming-platforms {
+        grid-template-columns: 1fr;
+    }
+
+    .platform-card {
+        padding: 1rem 1.25rem;
+    }
+
+    .review-stats {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+    }
+
+    .stat-box {
+        padding: 1rem;
+    }
+
+    .stat-value {
+        font-size: 1.5rem;
     }
 
     .characters-grid {

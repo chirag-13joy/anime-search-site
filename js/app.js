@@ -397,6 +397,11 @@ async function showAnimeModal(animeId) {
                         thumbnail
                         url
                     }
+                    externalLinks {
+                        site
+                        url
+                        type
+                    }
                 }
             }
         `;
@@ -424,6 +429,14 @@ function displayAnimeModal(anime) {
     const desc = anime.description ? anime.description.replace(/<[^>]*>/g, '') : 'No description available';
     const score = anime.averageScore ? (anime.averageScore / 10).toFixed(1) : 'N/A';
     
+    const streamingPlatforms = anime.externalLinks ? anime.externalLinks
+        .filter(link => link.type === 'STREAMING')
+        .map(link => ({
+            name: link.site,
+            url: link.url,
+            icon: getStreamingIcon(link.site)
+        })) : [];
+    
     const modal = document.getElementById('animeModal');
     const content = document.getElementById('modalContent');
     
@@ -434,6 +447,7 @@ function displayAnimeModal(anime) {
                 <img src="${anime.coverImage.extraLarge}" class="modal-poster" alt="${title}">
                 <div class="modal-details">
                     <h1>${title}</h1>
+                    ${anime.title.native ? `<p style="color: var(--text-secondary); margin-bottom: 1rem;">${anime.title.native}</p>` : ''}
                     <div class="modal-meta">
                         ${anime.averageScore ? `<span><i class="fas fa-star"></i> ${score}/10</span>` : ''}
                         ${anime.episodes ? `<span><i class="fas fa-film"></i> ${anime.episodes} Episodes</span>` : ''}
@@ -445,25 +459,69 @@ function displayAnimeModal(anime) {
                         ${anime.genres.map(g => `<span class="genre-tag">${g}</span>`).join('')}
                     </div>
                     <div class="carousel-actions">
+                        <button class="btn-play" onclick="toggleWatchlist(${anime.id}); this.innerHTML = '${isInWatchlist(anime.id) ? '<i class=\\'fas fa-bookmark\\'></i> Remove from Watchlist' : '<i class=\\'fas fa-bookmark\\'></i> Add to Watchlist'}'">
+                            <i class="fas fa-bookmark"></i> ${isInWatchlist(anime.id) ? 'Remove from' : 'Add to'} Watchlist
+                        </button>
                         ${anime.trailer && anime.trailer.site === 'youtube' ? `
-                            <button class="btn-play" onclick="playAnimeTrailer(${anime.id}, '${title.replace(/'/g, "\\'")}', '${anime.trailer.id}')">
+                            <button class="btn-info" onclick="playAnimeTrailer(${anime.id}, '${title.replace(/'/g, "\\'")}', '${anime.trailer.id}')">
                                 <i class="fas fa-play"></i> Watch Trailer
                             </button>
                         ` : ''}
-                        <button class="btn-info" onclick="toggleWatchlist(${anime.id})">
-                            <i class="fas fa-bookmark"></i> ${isInWatchlist(anime.id) ? 'Remove from' : 'Add to'} Watchlist
-                        </button>
                     </div>
                 </div>
             </div>
         </div>
         <div class="modal-description">${desc}</div>
+        
+        ${streamingPlatforms.length > 0 ? `
+            <div class="modal-section">
+                <h3><i class="fas fa-tv"></i> Where to Watch</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Watch this anime legally on these platforms:</p>
+                <div class="streaming-platforms">
+                    ${streamingPlatforms.map(platform => `
+                        <a href="${platform.url}" target="_blank" rel="noopener noreferrer" class="platform-card">
+                            <i class="${platform.icon}"></i>
+                            <span>${platform.name}</span>
+                            <i class="fas fa-external-link-alt" style="font-size: 0.9rem; opacity: 0.7;"></i>
+                        </a>
+                    `).join('')}
+                </div>
+            </div>
+        ` : `
+            <div class="modal-section">
+                <h3><i class="fas fa-tv"></i> Where to Watch</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Check these legal streaming platforms:</p>
+                <div class="streaming-platforms">
+                    <a href="https://www.crunchyroll.com/search?q=${encodeURIComponent(title)}" target="_blank" rel="noopener noreferrer" class="platform-card">
+                        <i class="fas fa-play-circle"></i>
+                        <span>Crunchyroll</span>
+                        <i class="fas fa-external-link-alt" style="font-size: 0.9rem; opacity: 0.7;"></i>
+                    </a>
+                    <a href="https://www.funimation.com/search/?q=${encodeURIComponent(title)}" target="_blank" rel="noopener noreferrer" class="platform-card">
+                        <i class="fas fa-play-circle"></i>
+                        <span>Funimation</span>
+                        <i class="fas fa-external-link-alt" style="font-size: 0.9rem; opacity: 0.7;"></i>
+                    </a>
+                    <a href="https://www.netflix.com/search?q=${encodeURIComponent(title)}" target="_blank" rel="noopener noreferrer" class="platform-card">
+                        <i class="fas fa-play-circle"></i>
+                        <span>Netflix</span>
+                        <i class="fas fa-external-link-alt" style="font-size: 0.9rem; opacity: 0.7;"></i>
+                    </a>
+                    <a href="https://www.hulu.com/search?q=${encodeURIComponent(title)}" target="_blank" rel="noopener noreferrer" class="platform-card">
+                        <i class="fas fa-play-circle"></i>
+                        <span>Hulu</span>
+                        <i class="fas fa-external-link-alt" style="font-size: 0.9rem; opacity: 0.7;"></i>
+                    </a>
+                </div>
+            </div>
+        `}
+
         ${anime.streamingEpisodes && anime.streamingEpisodes.length > 0 ? `
             <div class="modal-section">
-                <h3>Episodes</h3>
+                <h3><i class="fas fa-list"></i> Episodes (${anime.streamingEpisodes.length})</h3>
                 <div class="episodes-grid">
-                    ${anime.streamingEpisodes.slice(0, 12).map((ep, i) => `
-                        <div class="episode-card" onclick="playEpisode(${anime.id}, ${i + 1}, '${title.replace(/'/g, "\\'")}', '${ep.url}', '${ep.thumbnail}')">
+                    ${anime.streamingEpisodes.slice(0, 24).map((ep, i) => `
+                        <div class="episode-card">
                             <img src="${ep.thumbnail}" class="episode-thumb" alt="${ep.title}">
                             <div class="episode-info">
                                 <div class="episode-title">${ep.title || `Episode ${i + 1}`}</div>
@@ -473,10 +531,29 @@ function displayAnimeModal(anime) {
                     `).join('')}
                 </div>
             </div>
+        ` : anime.episodes ? `
+            <div class="modal-section">
+                <h3><i class="fas fa-list"></i> Episodes (${anime.episodes})</h3>
+                <div class="episodes-grid">
+                    ${Array.from({length: Math.min(anime.episodes, 24)}, (_, i) => `
+                        <div class="episode-card">
+                            <div class="episode-thumb" style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-play" style="font-size: 2rem; opacity: 0.5;"></i>
+                            </div>
+                            <div class="episode-info">
+                                <div class="episode-title">Episode ${i + 1}</div>
+                                <div class="episode-number">${anime.duration ? `${anime.duration} min` : 'Watch on platforms'}</div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                ${anime.episodes > 24 ? `<p style="text-align: center; color: var(--text-secondary); margin-top: 1rem;">+${anime.episodes - 24} more episodes</p>` : ''}
+            </div>
         ` : ''}
+        
         ${anime.characters && anime.characters.edges.length > 0 ? `
             <div class="modal-section">
-                <h3>Characters</h3>
+                <h3><i class="fas fa-users"></i> Characters</h3>
                 <div class="characters-grid">
                     ${anime.characters.edges.map(edge => `
                         <div class="character-card">
@@ -487,6 +564,29 @@ function displayAnimeModal(anime) {
                 </div>
             </div>
         ` : ''}
+
+        <div class="modal-section">
+            <h3><i class="fas fa-comments"></i> Community Reviews</h3>
+            <div class="reviews-section">
+                <div class="review-stats">
+                    <div class="stat-box">
+                        <div class="stat-value">${score}</div>
+                        <div class="stat-label">Rating</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value">${anime.episodes || '?'}</div>
+                        <div class="stat-label">Episodes</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value">${anime.status || 'N/A'}</div>
+                        <div class="stat-label">Status</div>
+                    </div>
+                </div>
+                <p style="color: var(--text-secondary); text-align: center; margin-top: 2rem;">
+                    <i class="fas fa-info-circle"></i> Join our community to write reviews and discuss this anime!
+                </p>
+            </div>
+        </div>
     `;
     
     modal.classList.remove('hidden');
@@ -504,6 +604,21 @@ function displayAnimeModal(anime) {
         modal.classList.remove('show');
         modal.classList.add('hidden');
     };
+}
+
+function getStreamingIcon(siteName) {
+    const icons = {
+        'Crunchyroll': 'fas fa-play-circle',
+        'Funimation': 'fas fa-play-circle',
+        'Netflix': 'fas fa-play-circle',
+        'Hulu': 'fas fa-play-circle',
+        'Amazon': 'fab fa-amazon',
+        'YouTube': 'fab fa-youtube',
+        'Animelab': 'fas fa-play-circle',
+        'VRV': 'fas fa-play-circle',
+        'HiDive': 'fas fa-play-circle'
+    };
+    return icons[siteName] || 'fas fa-play-circle';
 }
 
 function toggleWatchlist(animeId) {
