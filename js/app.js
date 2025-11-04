@@ -5,10 +5,12 @@ let currentSort = 'TRENDING_DESC';
 let watchlist = JSON.parse(localStorage.getItem('watchlist')) || [];
 let carouselIndex = 0;
 let carouselInterval;
+let currentUser = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
     initSearch();
+    initAuth();
     loadHomepage();
     initWatchlist();
 });
@@ -803,6 +805,172 @@ function setupPlayerClose(player, content) {
         }
     });
 }
+
+function initAuth() {
+    const loginBtn = document.getElementById('loginBtn');
+    if (loginBtn) {
+        loginBtn.addEventListener('click', showAuthModal);
+    }
+}
+
+function showAuthModal() {
+    const modal = document.getElementById('authModal');
+    modal.classList.remove('hidden');
+    modal.classList.add('show');
+    showLogin();
+}
+
+function closeAuthModal() {
+    const modal = document.getElementById('authModal');
+    modal.classList.remove('show');
+    modal.classList.add('hidden');
+}
+
+function showLogin() {
+    document.getElementById('loginForm').classList.remove('hidden');
+    document.getElementById('signupForm').classList.add('hidden');
+}
+
+function showSignup() {
+    document.getElementById('loginForm').classList.add('hidden');
+    document.getElementById('signupForm').classList.remove('hidden');
+}
+
+function toggleUserMenu() {
+    const menu = document.getElementById('userMenu');
+    menu.classList.toggle('hidden');
+}
+
+document.addEventListener('click', (e) => {
+    const userSection = document.getElementById('userSection');
+    const userMenu = document.getElementById('userMenu');
+    if (userSection && userMenu && !userSection.contains(e.target)) {
+        userMenu.classList.add('hidden');
+    }
+});
+
+async function handleLogin(event) {
+    event.preventDefault();
+    
+    if (!window.firebaseAuth) {
+        alert('Please add your Firebase configuration first!');
+        return;
+    }
+    
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    
+    const { signInWithEmailAndPassword } = window.firebaseAuthModule;
+    
+    try {
+        showLoader(true);
+        await signInWithEmailAndPassword(window.firebaseAuth, email, password);
+        closeAuthModal();
+        alert('Welcome back! 🎉');
+    } catch (error) {
+        console.error('Login error:', error);
+        alert('Login failed: ' + error.message);
+    } finally {
+        showLoader(false);
+    }
+}
+
+async function handleSignup(event) {
+    event.preventDefault();
+    
+    if (!window.firebaseAuth) {
+        alert('Please add your Firebase configuration first!');
+        return;
+    }
+    
+    const name = document.getElementById('signupName').value;
+    const email = document.getElementById('signupEmail').value;
+    const password = document.getElementById('signupPassword').value;
+    
+    const { createUserWithEmailAndPassword, updateProfile } = window.firebaseAuthModule;
+    
+    try {
+        showLoader(true);
+        const userCredential = await createUserWithEmailAndPassword(window.firebaseAuth, email, password);
+        await updateProfile(userCredential.user, { displayName: name });
+        
+        await saveUserData(userCredential.user);
+        
+        closeAuthModal();
+        alert('Account created successfully! Welcome! 🎉');
+    } catch (error) {
+        console.error('Signup error:', error);
+        alert('Signup failed: ' + error.message);
+    } finally {
+        showLoader(false);
+    }
+}
+
+async function signInWithGoogle() {
+    if (!window.firebaseAuth) {
+        alert('Please add your Firebase configuration first!');
+        return;
+    }
+    
+    const { GoogleAuthProvider, signInWithPopup } = window.firebaseAuthModule;
+    const provider = new GoogleAuthProvider();
+    
+    try {
+        showLoader(true);
+        const result = await signInWithPopup(window.firebaseAuth, provider);
+        await saveUserData(result.user);
+        closeAuthModal();
+        alert('Welcome! 🎉');
+    } catch (error) {
+        console.error('Google sign-in error:', error);
+        alert('Sign in failed: ' + error.message);
+    } finally {
+        showLoader(false);
+    }
+}
+
+async function logout() {
+    if (!window.firebaseAuth) return;
+    
+    const { signOut } = window.firebaseAuthModule;
+    
+    try {
+        await signOut(window.firebaseAuth);
+        alert('Logged out successfully!');
+        window.location.href = '#home';
+    } catch (error) {
+        console.error('Logout error:', error);
+        alert('Logout failed: ' + error.message);
+    }
+}
+
+async function saveUserData(user) {
+    if (!window.firebaseDb) return;
+    
+    const { doc, setDoc, serverTimestamp } = window.firebaseFirestoreModule;
+    
+    try {
+        const userRef = doc(window.firebaseDb, 'users', user.uid);
+        await setDoc(userRef, {
+            displayName: user.displayName,
+            email: user.email,
+            photoURL: user.photoURL,
+            createdAt: serverTimestamp(),
+            lastLogin: serverTimestamp()
+        }, { merge: true });
+    } catch (error) {
+        console.error('Error saving user data:', error);
+    }
+}
+
+window.handleLogin = handleLogin;
+window.handleSignup = handleSignup;
+window.signInWithGoogle = signInWithGoogle;
+window.logout = logout;
+window.closeAuthModal = closeAuthModal;
+window.showLogin = showLogin;
+window.showSignup = showSignup;
+window.toggleUserMenu = toggleUserMenu;
 
 function playEpisode(animeId, episodeNum, title, url, thumbnail) {
     const player = document.getElementById('videoPlayer');
