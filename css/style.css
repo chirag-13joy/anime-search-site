@@ -960,6 +960,162 @@ main {
     border: none;
 }
 
+.episode-viewer {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: var(--dark-bg);
+    overflow-y: auto;
+}
+
+.episode-viewer-thumbnail {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: #000;
+}
+
+.episode-viewer-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.play-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.play-overlay i {
+    font-size: 5rem;
+    color: white;
+    opacity: 0.9;
+}
+
+.episode-viewer-placeholder {
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.episode-viewer-placeholder i {
+    font-size: 5rem;
+    color: white;
+    opacity: 0.5;
+}
+
+.episode-viewer-info {
+    padding: 2rem;
+    flex: 1;
+}
+
+.episode-viewer-info h2 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.episode-viewer-info h3 {
+    font-size: 1.5rem;
+    color: var(--primary);
+    margin-bottom: 1.5rem;
+}
+
+.episode-viewer-info p {
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+}
+
+.episode-platforms {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.episode-platform-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 1.25rem 2rem;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.05rem;
+    transition: all 0.3s;
+    border: 2px solid transparent;
+}
+
+.episode-platform-btn.crunchyroll {
+    background: linear-gradient(135deg, #f47521 0%, #ff8534 100%);
+    color: white;
+}
+
+.episode-platform-btn.crunchyroll:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(244, 117, 33, 0.4);
+}
+
+.episode-platform-btn.funimation {
+    background: linear-gradient(135deg, #410099 0%, #5e00e0 100%);
+    color: white;
+}
+
+.episode-platform-btn.funimation:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(94, 0, 224, 0.4);
+}
+
+.episode-platform-btn.netflix {
+    background: linear-gradient(135deg, #e50914 0%, #ff1e2e 100%);
+    color: white;
+}
+
+.episode-platform-btn.netflix:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(229, 9, 20, 0.4);
+}
+
+.episode-platform-btn.hulu {
+    background: linear-gradient(135deg, #1ce783 0%, #3cff9a 100%);
+    color: #000;
+}
+
+.episode-platform-btn.hulu:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(28, 231, 131, 0.4);
+}
+
+.episode-platform-btn i {
+    font-size: 1.3rem;
+}
+
+.episode-note {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: rgba(139, 92, 246, 0.1);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 12px;
+    color: var(--text-secondary);
+}
+
+.episode-note i {
+    font-size: 1.5rem;
+    color: var(--accent);
+}
+
 .player-info {
     position: absolute;
     bottom: 0;
@@ -982,6 +1138,39 @@ main {
 }
 
 @media (max-width: 768px) {
+    .episode-viewer-info {
+        padding: 1.5rem;
+    }
+
+    .episode-viewer-info h2 {
+        font-size: 1.5rem;
+    }
+
+    .episode-viewer-info h3 {
+        font-size: 1.25rem;
+    }
+
+    .episode-viewer-info p {
+        font-size: 1rem;
+    }
+
+    .episode-platforms {
+        grid-template-columns: 1fr;
+    }
+
+    .episode-platform-btn {
+        padding: 1rem 1.5rem;
+        font-size: 1rem;
+    }
+
+    .play-overlay i {
+        font-size: 4rem;
+    }
+
+    .episode-viewer-placeholder i {
+        font-size: 4rem;
+    }
+
     .player-container {
         width: 95%;
         aspect-ratio: 16/9;

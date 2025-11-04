@@ -521,7 +521,7 @@ function displayAnimeModal(anime) {
                 <h3><i class="fas fa-list"></i> Episodes (${anime.streamingEpisodes.length})</h3>
                 <div class="episodes-grid">
                     ${anime.streamingEpisodes.slice(0, 24).map((ep, i) => `
-                        <div class="episode-card">
+                        <div class="episode-card" onclick="showEpisodeInfo('${title.replace(/'/g, "\\'")}', ${i + 1}, '${ep.thumbnail}')">
                             <img src="${ep.thumbnail}" class="episode-thumb" alt="${ep.title}">
                             <div class="episode-info">
                                 <div class="episode-title">${ep.title || `Episode ${i + 1}`}</div>
@@ -536,13 +536,13 @@ function displayAnimeModal(anime) {
                 <h3><i class="fas fa-list"></i> Episodes (${anime.episodes})</h3>
                 <div class="episodes-grid">
                     ${Array.from({length: Math.min(anime.episodes, 24)}, (_, i) => `
-                        <div class="episode-card">
+                        <div class="episode-card" onclick="showEpisodeInfo('${title.replace(/'/g, "\\'")}', ${i + 1}, null)">
                             <div class="episode-thumb" style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); display: flex; align-items: center; justify-content: center;">
                                 <i class="fas fa-play" style="font-size: 2rem; opacity: 0.5;"></i>
                             </div>
                             <div class="episode-info">
                                 <div class="episode-title">Episode ${i + 1}</div>
-                                <div class="episode-number">${anime.duration ? `${anime.duration} min` : 'Watch on platforms'}</div>
+                                <div class="episode-number">${anime.duration ? `${anime.duration} min` : 'Tap to watch'}</div>
                             </div>
                         </div>
                     `).join('')}
@@ -619,6 +619,60 @@ function getStreamingIcon(siteName) {
         'HiDive': 'fas fa-play-circle'
     };
     return icons[siteName] || 'fas fa-play-circle';
+}
+
+function showEpisodeInfo(title, episodeNum, thumbnail) {
+    const player = document.getElementById('videoPlayer');
+    const content = document.getElementById('playerContent');
+    
+    content.innerHTML = `
+        <div class="episode-viewer">
+            ${thumbnail ? `
+                <div class="episode-viewer-thumbnail">
+                    <img src="${thumbnail}" alt="Episode ${episodeNum}">
+                    <div class="play-overlay">
+                        <i class="fas fa-play-circle"></i>
+                    </div>
+                </div>
+            ` : `
+                <div class="episode-viewer-placeholder">
+                    <i class="fas fa-play-circle"></i>
+                </div>
+            `}
+            <div class="episode-viewer-info">
+                <h2>${title}</h2>
+                <h3>Episode ${episodeNum}</h3>
+                <p>Watch this episode on these legal streaming platforms:</p>
+                <div class="episode-platforms">
+                    <a href="https://www.crunchyroll.com/search?q=${encodeURIComponent(title)}" target="_blank" rel="noopener noreferrer" class="episode-platform-btn crunchyroll">
+                        <i class="fas fa-play"></i>
+                        <span>Watch on Crunchyroll</span>
+                    </a>
+                    <a href="https://www.funimation.com/search/?q=${encodeURIComponent(title)}" target="_blank" rel="noopener noreferrer" class="episode-platform-btn funimation">
+                        <i class="fas fa-play"></i>
+                        <span>Watch on Funimation</span>
+                    </a>
+                    <a href="https://www.netflix.com/search?q=${encodeURIComponent(title)}" target="_blank" rel="noopener noreferrer" class="episode-platform-btn netflix">
+                        <i class="fas fa-play"></i>
+                        <span>Watch on Netflix</span>
+                    </a>
+                    <a href="https://www.hulu.com/search?q=${encodeURIComponent(title)}" target="_blank" rel="noopener noreferrer" class="episode-platform-btn hulu">
+                        <i class="fas fa-play"></i>
+                        <span>Watch on Hulu</span>
+                    </a>
+                </div>
+                <div class="episode-note">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Streaming on legal platforms supports the anime industry and creators</span>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    player.classList.remove('hidden');
+    player.classList.add('show');
+    
+    setupPlayerClose(player, content);
 }
 
 function toggleWatchlist(animeId) {
@@ -708,19 +762,21 @@ function playAnimeTrailer(animeId, title, trailerId) {
     
     content.innerHTML = `
         <iframe 
-            src="https://www.youtube.com/embed/${trailerId}?autoplay=1&rel=0" 
-            allow="autoplay; fullscreen; picture-in-picture"
-            allowfullscreen>
+            src="https://www.youtube-nocookie.com/embed/${trailerId}?autoplay=1&controls=1&modestbranding=1&rel=0&showinfo=0&fs=1&iv_load_policy=3&cc_load_policy=0&disablekb=0"
+            allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+            allowfullscreen
+            frameborder="0"
+            style="width: 100%; height: 100%; position: absolute; top: 0; left: 0;">
         </iframe>
-        <div class="player-info">
-            <div class="player-title">${title}</div>
-            <div class="player-episode">Official Trailer</div>
-        </div>
     `;
     
     player.classList.remove('hidden');
     player.classList.add('show');
     
+    setupPlayerClose(player, content);
+}
+
+function setupPlayerClose(player, content) {
     const closeBtn = player.querySelector('.player-close');
     const overlay = player.querySelector('.player-overlay');
     
@@ -732,6 +788,13 @@ function playAnimeTrailer(animeId, title, trailerId) {
     
     closeBtn.onclick = closePlayer;
     overlay.onclick = closePlayer;
+    
+    document.addEventListener('keydown', function escHandler(e) {
+        if (e.key === 'Escape' && player.classList.contains('show')) {
+            closePlayer();
+            document.removeEventListener('keydown', escHandler);
+        }
+    });
 }
 
 function playEpisode(animeId, episodeNum, title, url, thumbnail) {
