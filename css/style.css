@@ -905,15 +905,23 @@ main {
 }
 
 .modal {
-    display: none;
     position: fixed;
     inset: 0;
     z-index: 2000;
     overflow-y: auto;
+    opacity: 1;
+    pointer-events: auto;
+    transition: opacity 0.3s;
+}
+
+.modal.hidden {
+    opacity: 0;
+    pointer-events: none;
 }
 
 .modal.show {
-    display: block;
+    opacity: 1;
+    pointer-events: auto;
     animation: fadeIn 0.3s;
 }
 
