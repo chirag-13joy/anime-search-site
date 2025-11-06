@@ -2,16 +2,17 @@
 // Get it from: Firebase Console → Project Settings → Your Apps → Web App
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY_HERE",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBC6kpyUrj00y7iMtN9xncQ1dharectwi0",
+  authDomain: "anime-community-dea21.firebaseapp.com",
+  projectId: "anime-community-dea21",
+  storageBucket: "anime-community-dea21.firebasestorage.app",
+  messagingSenderId: "622986348267",
+  appId: "1:622986348267:web:57672bfa8b6561c99d20ae",
+  measurementId: "G-9MFFL1SF2M"
 };
 
 // Initialize Firebase
-if (firebaseConfig.apiKey !== "YOUR_API_KEY_HERE" && typeof firebase !== 'undefined') {
+if (typeof firebase !== 'undefined') {
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db = firebase.firestore();
@@ -28,9 +29,8 @@ if (firebaseConfig.apiKey !== "YOUR_API_KEY_HERE" && typeof firebase !== 'undefi
       updateUIForLoggedOutUser();
     }
   });
-} else if (firebaseConfig.apiKey === "YOUR_API_KEY_HERE") {
-  console.warn('⚠️ Please add your Firebase configuration in js/firebase-config.js');
-  console.log('📝 Site will work without Firebase, but login features will be disabled');
+} else {
+  console.warn('⚠️ Firebase SDK not loaded');
 }
 
 function updateUIForLoggedInUser(user) {
